@@ -16,6 +16,7 @@ import {
   deleteCustomer,
   deleteCustomerDevice,
   deleteItemMaster,
+  downloadInwardSessionExcel,
   findCustomerByExactMobile,
   findCustomerByNameOrMobile,
   getInwardDevices,
@@ -29,11 +30,13 @@ import {
   upsertCustomerMaster,
   upsertItemMaster,
 } from "../js/customerData";
+import CpeBulkMacUpload from "./CpeBulkMacUpload";
 import CpeComboBox from "./CpeComboBox";
 import CpeCustomerBoard from "./CpeCustomerBoard";
 import CpeDatePicker from "./CpeDatePicker";
 import { DeleteConfirmModal, DeleteIconButton, SuccessModal } from "./CpeDeleteUi";
 import CpeOutwardDesk from "./CpeOutwardDesk";
+import ExcelBrandIcon from "./ExcelBrandIcon";
 import { TablePager, usePagination } from "./pagination";
 import { useCpeSession } from "../js/useCpeSession";
 import { useCustomers, useItems } from "../js/useCustomers";
@@ -257,6 +260,7 @@ export default function CpeEntry() {
   const [scanFeedback, setScanFeedback] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState(null);
   const [itemSuccess, setItemSuccess] = useState(null);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
 
   const matchedFlowCustomer = useMemo(
     () => findCustomerByNameOrMobile(flow.mobile || flow.name, customers),
@@ -686,6 +690,60 @@ export default function CpeEntry() {
     setScanFeedback(null);
   }
 
+  function handleDownloadInwardExcel() {
+    try {
+      if (!matchedFlowCustomer) {
+        throw new Error("Select a customer first, then download Excel.");
+      }
+      const count = downloadInwardSessionExcel(matchedFlowCustomer);
+      flashScanOk(`Downloaded Excel · ${count} MAC ID${count === 1 ? "" : "s"}.`);
+    } catch (err) {
+      flashScanErr(err.message || "Download failed.");
+    }
+  }
+
+  function openBulkUpload() {
+    const matched =
+      matchedFlowCustomer ||
+      findCustomerByNameOrMobile(flow.mobile || flow.name, customers);
+    const mobile = normalizeMobile(flow.mobile) || normalizeMobile(matched?.mobile);
+    if (!mobile) {
+      flashScanErr(
+        "Select a customer (name or mobile) first, then upload the XL sheet.",
+      );
+      return;
+    }
+    setBulkUploadOpen(true);
+  }
+
+  function uploadBulkMac(macId) {
+    const matched =
+      matchedFlowCustomer ||
+      findCustomerByNameOrMobile(flow.mobile || flow.name, customers);
+    const mobile = normalizeMobile(flow.mobile) || normalizeMobile(matched?.mobile);
+    if (!mobile) {
+      throw new Error("Customer mobile missing. Close and select a customer.");
+    }
+
+    // Bulk XL: only the MAC address from the sheet — no box / remarks / other columns.
+    const result = scanInwardMac({
+      name: matched?.name || flow.name || "",
+      date: matched?.date || "",
+      location: matched?.location || "",
+      mobile,
+      remarks: matched?.remarks || "",
+      macId,
+      boxModel: "",
+      boxType: "",
+    });
+
+    setSessionScans((current) => [
+      { macId: result.macId, quantity: result.quantity },
+      ...current,
+    ]);
+    return result;
+  }
+
   function applyOutcome(outcome) {
     try {
       if (!flow.mobile) throw new Error("Load a customer first.");
@@ -1072,6 +1130,19 @@ export default function CpeEntry() {
                   >
                     No MAC ID
                   </button>
+                  <button
+                    type="button"
+                    className="cpe-entry-bulk-btn"
+                    title="Upload MAC IDs from Excel sheet"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openBulkUpload();
+                    }}
+                  >
+                    <ExcelBrandIcon />
+                    <span>Upload XL sheet</span>
+                  </button>
                 </div>
                 {scanFeedback && (
                   <p
@@ -1093,9 +1164,25 @@ export default function CpeEntry() {
             </div>
 
             <div className="cpe-entry-scan-summary">
-              <div>
+              <div className="cpe-entry-scan-qty">
                 <span>Session quantity</span>
-                <strong>{inwardScanRows.length}</strong>
+                <div className="cpe-entry-scan-qty-row">
+                  <strong>{inwardScanRows.length}</strong>
+                  <span className="cpe-entry-excel-wrap">
+                    <button
+                      type="button"
+                      className="cpe-entry-download-xl"
+                      disabled={inwardScanRows.length === 0}
+                      aria-label="Download Excel"
+                      onClick={handleDownloadInwardExcel}
+                    >
+                      <ExcelBrandIcon />
+                    </button>
+                    <span className="cpe-entry-excel-tip" role="tooltip">
+                      Download Excel
+                    </span>
+                  </span>
+                </div>
               </div>
               <button type="button" className="cpe-entry-secondary" onClick={clearFlow}>
                 Clear form
@@ -1313,6 +1400,29 @@ export default function CpeEntry() {
         message={itemSuccess?.message || ""}
         buttonLabel="Continue"
         onClose={() => setItemSuccess(null)}
+      />
+      <CpeBulkMacUpload
+        open={bulkUploadOpen}
+        customerLabel={
+          matchedFlowCustomer
+            ? `${matchedFlowCustomer.name} · ${matchedFlowCustomer.mobile}`
+            : flow.name || flow.mobile
+              ? `${flow.name || "Customer"} · ${flow.mobile || ""}`.trim()
+              : ""
+        }
+        onClose={() => setBulkUploadOpen(false)}
+        onUploadMac={uploadBulkMac}
+        onComplete={({ saved, failed }) => {
+          if (saved > 0 && failed === 0) {
+            flashScanOk(`Bulk upload success · ${saved} MAC ID${saved === 1 ? "" : "s"} saved.`);
+          } else if (saved > 0) {
+            flashScanOk(
+              `Bulk upload finished · ${saved} saved, ${failed} error${failed === 1 ? "" : "s"}.`,
+            );
+          } else if (failed > 0) {
+            flashScanErr(`Bulk upload failed · ${failed} MAC ID${failed === 1 ? "" : "s"} had errors.`);
+          }
+        }}
       />
     </main>
   );

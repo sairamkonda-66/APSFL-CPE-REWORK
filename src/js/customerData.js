@@ -1033,6 +1033,156 @@ export function downloadCustomerExcel(customer) {
   return customer;
 }
 
+const OUTWARD_EXPORT = {
+  repaired: {
+    title: "Ready to ship · Repaired",
+    file: "Repaired",
+    sheet: "Repaired",
+    empty: "No repaired items to download.",
+  },
+  scrap: {
+    title: "Scrap items",
+    file: "Scrap",
+    sheet: "Scrap",
+    empty: "No scrap items to download.",
+  },
+  shipped: {
+    title: "Shipped items",
+    file: "Shipped",
+    sheet: "Shipped",
+    empty: "No shipped items to download.",
+  },
+};
+
+/** Download one outward section list (repaired / scrap / shipped) as Excel. */
+export function downloadOutwardSectionExcel(rows, section = "repaired") {
+  const meta = OUTWARD_EXPORT[section] || OUTWARD_EXPORT.repaired;
+  const list = Array.isArray(rows) ? rows : [];
+  if (!list.length) {
+    throw new Error(meta.empty);
+  }
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const history = section === "shipped";
+  const headers = history
+    ? ["S NO", "CUSTOMER", "MOBILE", "MAC ID", "BOX", "INWARD", "REPAIR OUTWARD", "SHIPPED"]
+    : ["S NO", "CUSTOMER", "MOBILE", "MAC ID", "BOX", "STATUS", "DATE"];
+
+  const dataRows = list.map(({ customer, device }, index) => {
+    const tone = rowStyle(index);
+    const box = device?.boxModel || device?.boxType || "";
+    if (history) {
+      return [
+        cell(index + 1, tone),
+        cell(customer?.name || "", tone),
+        cell(customer?.mobile || "", tone),
+        cell(device?.macId || "", tone),
+        cell(box, tone),
+        cell(device?.receivedDate || "", tone),
+        cell(device?.outwardDate || "", tone),
+        cell(device?.shippedDate || "", tone),
+      ];
+    }
+    return [
+      cell(index + 1, tone),
+      cell(customer?.name || "", tone),
+      cell(customer?.mobile || "", tone),
+      cell(device?.macId || "", tone),
+      cell(box, tone),
+      cell(device?.repairStatus || "", statusStyle(device?.repairStatus)),
+      cell(device?.outwardDate || device?.receivedDate || "", tone),
+    ];
+  });
+
+  const pad = headers.map(() => "");
+  const rowsSheet = [
+    [cell("APSFL CPE Rework Desk", "title"), ...pad.slice(1)],
+    [cell(`Outward · ${meta.title}`, "meta"), ...pad.slice(1)],
+    [cell(`Generated: ${stamp}`, "meta"), cell(`Rows: ${list.length}`, "meta"), ...pad.slice(2)],
+    [],
+    headerRow(headers),
+    ...dataRows,
+  ];
+
+  triggerExcelDownload(
+    buildXlsxBlob([
+      {
+        name: sheetName(meta.sheet, "Outward"),
+        rows: rowsSheet,
+      },
+    ]),
+    `APSFL-CPE-Outward-${meta.file}-${stamp}.xlsx`,
+  );
+  return list.length;
+}
+
+/** Download the inward session MAC list shown beside Session quantity. */
+export function downloadInwardSessionExcel(customer) {
+  if (!customer?.mobile && !customer?.name) {
+    throw new Error("Select a customer first.");
+  }
+  const devices = customer.devices || [];
+  if (!devices.length) {
+    throw new Error("No scanned MAC IDs to download.");
+  }
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const safeName = String(customer.name || customer.mobile || "customer")
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, "-")
+    .slice(0, 40);
+
+  const rows = [
+    [cell("APSFL CPE Rework Desk", "title"), "", "", "", "", "", ""],
+    [cell("Inward session MAC list", "meta"), "", "", "", "", "", ""],
+    [
+      cell(`Customer: ${customer.name || "—"}`, "meta"),
+      cell(`Mobile: ${customer.mobile || "—"}`, "meta"),
+      cell(`Generated: ${stamp}`, "meta"),
+      "",
+      "",
+      "",
+      "",
+    ],
+    [],
+    headerRow([
+      "S NO",
+      "MAC ID",
+      "QTY AFTER SCAN",
+      "BOX MODEL",
+      "BOX TYPE",
+      "STATUS",
+      "DATE",
+    ]),
+    ...devices.map((device, index) => {
+      const tone = rowStyle(index);
+      return [
+        cell(index + 1, tone),
+        cell(device.macId || "", tone),
+        cell(index + 1, tone),
+        cell(device.boxModel || "", tone),
+        cell(device.boxType || device.boxModel || "", tone),
+        cell(
+          device.repairStatus || device.status || DEVICE_STATUS.INWARD,
+          statusStyle(device.repairStatus || device.status),
+        ),
+        cell(device.receivedDate || device.date || customer.date || "", tone),
+      ];
+    }),
+  ];
+
+  triggerExcelDownload(
+    buildXlsxBlob([
+      {
+        name: sheetName(`Inward-${safeName}`, "Inward MACs"),
+        rows,
+      },
+    ]),
+    `APSFL-CPE-Inward-${safeName}-${stamp}.xlsx`,
+  );
+  return devices.length;
+}
+
 /** @deprecated kept for older imports */
 export const REPAIR_STATUSES = [
   DEVICE_STATUS.INWARD,
