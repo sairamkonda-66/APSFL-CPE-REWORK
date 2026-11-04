@@ -1,0 +1,4 @@
+# Optional — helps if you later change routing.
+# Hash routes (#dashboard) already work without this.
+DirectoryIndex index.html
+Options -Indexes

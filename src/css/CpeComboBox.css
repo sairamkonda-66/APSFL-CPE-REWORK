@@ -1,0 +1,151 @@
+.cpe-combo {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.cpe-combo.is-open {
+  z-index: 30;
+}
+
+.cpe-combo.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.cpe-combo-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cpe-combo-field input {
+  width: 100%;
+  height: 46px;
+  box-sizing: border-box;
+  padding: 0 2.5rem 0 0.9rem;
+  border: 1px solid #d5dde8;
+  border-radius: 10px;
+  background: #fff;
+  color: #0f1724;
+  font: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.cpe-combo-field input::placeholder {
+  color: #94a3b8;
+}
+
+.cpe-combo.is-open .cpe-combo-field input,
+.cpe-combo-field input:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.cpe-combo.is-open .cpe-combo-field input {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none;
+}
+
+.cpe-combo-chevron {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #0f1724;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cpe-combo-chevron svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.15s ease;
+}
+
+.cpe-combo.is-open .cpe-combo-chevron svg {
+  transform: rotate(180deg);
+}
+
+.cpe-combo-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #d5dde8;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(15, 40, 80, 0.12);
+}
+
+.cpe-combo-list.is-down {
+  border-radius: 0 0 10px 10px;
+  border-top: 1px solid #e8eef5;
+}
+
+.cpe-combo-list.is-up {
+  border-radius: 10px 10px 0 0;
+  border-bottom: 1px solid #e8eef5;
+}
+
+.cpe-combo-list li + li {
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.cpe-combo-list button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.18rem;
+  margin: 0;
+  padding: 0.78rem 0.95rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #0f1724;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cpe-combo-label {
+  color: #0f1724;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+
+.cpe-combo-meta {
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.cpe-combo-list button:hover,
+.cpe-combo-list button.is-active {
+  background: #f1f6ff;
+}
+
+.cpe-combo-empty {
+  padding: 0.85rem 0.95rem;
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+html[data-theme="dark"] .cpe-combo-field input {
+  background: #fff;
+  color: #0f1724;
+  border-color: #d5dde8;
+}

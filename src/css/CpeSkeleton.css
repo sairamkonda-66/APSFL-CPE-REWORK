@@ -1,0 +1,106 @@
+.cpe-skel {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(100deg, #e4ebf4 18%, #f8fafc 42%, #e4ebf4 68%);
+  background-size: 220% 100%;
+  animation: cpe-skel-shimmer 1.15s ease-in-out infinite;
+}
+
+.cpe-skel-note {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cpe-skel-stat {
+  width: 3.4rem;
+  height: 1.7rem;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+}
+
+.cpe-skel-chip {
+  width: 5.6rem;
+  height: 1.65rem;
+  border-radius: 999px;
+}
+
+.cpe-skel-line {
+  width: min(16rem, 72%);
+  height: 0.9rem;
+}
+
+.cpe-skel-line.is-short {
+  width: min(9rem, 46%);
+  margin-top: 0.45rem;
+}
+
+.cpe-skel-pill {
+  width: 3.4rem;
+  height: 1.55rem;
+  border-radius: 999px;
+}
+
+.cpe-skel-wide {
+  width: min(9rem, 100%);
+  height: 1.45rem;
+  border-radius: 999px;
+}
+
+.cpe-skel-btn {
+  width: 7.2rem;
+  height: 2.2rem;
+  border-radius: 12px;
+}
+
+.cpe-skel-rowbar {
+  width: 100%;
+  height: 2.4rem;
+}
+
+.cpe-skel-block {
+  width: 100%;
+  height: 2.6rem;
+  margin-top: 0.55rem;
+}
+
+.cpe-board-row.is-skel .cpe-board-main {
+  padding: 0.95rem;
+}
+
+.cpe-out-section.is-loading {
+  padding-bottom: 1rem;
+}
+
+.cpe-entry-mini-list .cpe-skel-line + .cpe-skel-line {
+  margin-top: 0.7rem;
+}
+
+@keyframes cpe-skel-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (max-width: 767px) {
+  .cpe-skel-row,
+  .cpe-skel-row td {
+    display: block;
+  }
+
+  .cpe-skel-row td {
+    padding: 0.9rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpe-skel {
+    animation: none;
+    background: #e7eef6;
+  }
+}

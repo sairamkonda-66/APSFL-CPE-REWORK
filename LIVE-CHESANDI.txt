@@ -1,0 +1,39 @@
+========================================
+APSFL CPE — GODADDY UPLOAD (SIMPLE)
+========================================
+
+GODADDY KI UPLOAD CHEYALSINDI
+→ Desktop\CPE-UPLOAD-GODADDY
+
+Lo unnai ONLY:
+  index.html
+  assets\
+  .htaccess
+
+React source / node_modules / New folder dist
+UPLOAD CHEYAKANDI.
+
+
+GODADDY LO REACT INSTALL?
+→ LEDU. Avasarame ledu.
+
+Endukante: React already build ayyi
+plain HTML + CSS + JS ayyindi.
+GoDaddy static files matrame host chestundi.
+
+
+UPLOAD STEPS
+1) GoDaddy → File Manager → public_html
+2) CPE-UPLOAD-GODADDY lo unna anni files upload
+3) Open: https://YOUR-DOMAIN.com
+
+
+CODE FOLDER (local only, git ledu)
+→ Desktop\apsfl-cpe-live
+
+Update chesinaka:
+  npm run build
+  dist files ni CPE-UPLOAD-GODADDY ki copy
+  malli GoDaddy upload
+========================================
+
