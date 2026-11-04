@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   DEVICE_STATUS,
+  downloadOutwardSectionExcel,
   filterOutwardRows,
   getRepairedOutwardRows,
   getScrapOutwardRows,
@@ -10,8 +11,28 @@ import {
 import CpeCustomerBoard from "./CpeCustomerBoard";
 import { Skel } from "./CpeSkeleton";
 import { SuccessModal } from "./CpeDeleteUi";
+import ExcelBrandIcon from "./ExcelBrandIcon";
 import { TablePager, usePagination } from "./pagination";
 import "../css/CpeOutwardDesk.css";
+
+function DownloadXlButton({ disabled, onClick, tip }) {
+  return (
+    <span className="cpe-entry-excel-wrap">
+      <button
+        type="button"
+        className="cpe-entry-download-xl"
+        disabled={disabled}
+        aria-label={tip}
+        onClick={onClick}
+      >
+        <ExcelBrandIcon />
+      </button>
+      <span className="cpe-entry-excel-tip" role="tooltip">
+        {tip}
+      </span>
+    </span>
+  );
+}
 
 function statusTone(status) {
   if (status === DEVICE_STATUS.SHIPPED) return "is-ship";
@@ -247,6 +268,19 @@ export default function CpeOutwardDesk({ customers, loading = false }) {
     }
   }
 
+  function handleDownloadSection(section, rows) {
+    setError("");
+    try {
+      const count = downloadOutwardSectionExcel(rows, section);
+      setSuccess({
+        title: "Excel downloaded",
+        message: `Downloaded ${count} ${section} item${count === 1 ? "" : "s"} as Excel.`,
+      });
+    } catch (err) {
+      setError(err.message || "Download failed.");
+    }
+  }
+
   const total = repairedAll.length + scrapAll.length + shippedAll.length;
 
   return (
@@ -333,6 +367,11 @@ export default function CpeOutwardDesk({ customers, loading = false }) {
                   Ship selected{selectedKeys.length > 0 ? ` (${selectedKeys.length})` : ""}
                 </button>
                 <strong>{repaired.length}</strong>
+                <DownloadXlButton
+                  disabled={repaired.length === 0}
+                  tip="Download repaired data"
+                  onClick={() => handleDownloadSection("repaired", repaired)}
+                />
               </div>
             </header>
             <OutwardTable
@@ -351,7 +390,14 @@ export default function CpeOutwardDesk({ customers, loading = false }) {
                 <h3>Scrap items</h3>
                 <p>Marked scrap from Repair Status.</p>
               </div>
-              <strong>{scrap.length}</strong>
+              <div className="cpe-out-section-actions">
+                <strong>{scrap.length}</strong>
+                <DownloadXlButton
+                  disabled={scrap.length === 0}
+                  tip="Download scraped data"
+                  onClick={() => handleDownloadSection("scrap", scrap)}
+                />
+              </div>
             </header>
             <OutwardTable rows={scrap} emptyText="No scrap items match this search." />
           </article>
@@ -362,7 +408,14 @@ export default function CpeOutwardDesk({ customers, loading = false }) {
                 <h3>Shipped items</h3>
                 <p>Inward, repair outward, and shipped dates for each box.</p>
               </div>
-              <strong>{shipped.length}</strong>
+              <div className="cpe-out-section-actions">
+                <strong>{shipped.length}</strong>
+                <DownloadXlButton
+                  disabled={shipped.length === 0}
+                  tip="Download shipped data"
+                  onClick={() => handleDownloadSection("shipped", shipped)}
+                />
+              </div>
             </header>
             <OutwardTable rows={shipped} showHistory emptyText="No shipped items yet." />
           </article>

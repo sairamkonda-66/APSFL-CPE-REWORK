@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import CpeLogin from "./CpeLogin";
 import CpeSessionBar from "./CpeSessionBar";
@@ -27,6 +27,45 @@ import { useCpeSession } from "../js/useCpeSession";
 import { useCustomers } from "../js/useCustomers";
 import { LoadingNote, Skel } from "./CpeSkeleton";
 import "../css/CpeDashboard.css";
+
+/** Animate a number from 0 → target on mount / when target changes. */
+function CountUp({ value, duration = 1100 }) {
+  const target = Math.max(0, Math.round(Number(value) || 0));
+  const [display, setDisplay] = useState(0);
+  const frameRef = useRef(0);
+  const startRef = useRef(0);
+  const fromRef = useRef(0);
+
+  useEffect(() => {
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setDisplay(target);
+      return undefined;
+    }
+
+    cancelAnimationFrame(frameRef.current);
+    fromRef.current = 0;
+    setDisplay(0);
+    startRef.current = 0;
+    const span = Math.max(0, target - fromRef.current);
+    const ms = Math.min(1600, Math.max(650, duration + Math.min(span, 800)));
+
+    function tick(now) {
+      if (!startRef.current) startRef.current = now;
+      const t = Math.min(1, (now - startRef.current) / ms);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(fromRef.current + span * eased));
+      if (t < 1) frameRef.current = requestAnimationFrame(tick);
+    }
+
+    frameRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [target, duration]);
+
+  return <strong>{display.toLocaleString("en-IN")}</strong>;
+}
 
 function statusClass(status) {
   const s = String(status || "").toLowerCase();
@@ -574,21 +613,121 @@ export default function CpeDashboard() {
       <CpeSessionBar session={session} showEntryLink showDashboardLink={false} />
 
       <section className="cpe-dash-stats w" aria-label="Summary" aria-busy={loading}>
-        <article data-tone="violet">
-          <span>Customers</span>
-          {loading ? <Skel className="cpe-skel-stat" /> : <strong>{stats.customers}</strong>}
+        <article data-tone="customers">
+          <span className="cpe-dash-stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="2.6" stroke="currentColor" strokeWidth="1.7" />
+              <path
+                d="M7.2 18.2c.4-2.55 2.35-4.1 4.8-4.1s4.4 1.55 4.8 4.1"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <circle cx="6.4" cy="9.1" r="2.05" stroke="currentColor" strokeWidth="1.55" />
+              <path
+                d="M3.2 17.6c.3-1.85 1.55-3 3.2-3.2"
+                stroke="currentColor"
+                strokeWidth="1.55"
+                strokeLinecap="round"
+              />
+              <circle cx="17.6" cy="9.1" r="2.05" stroke="currentColor" strokeWidth="1.55" />
+              <path
+                d="M20.8 17.6c-.3-1.85-1.55-3-3.2-3.2"
+                stroke="currentColor"
+                strokeWidth="1.55"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          <p className="cpe-dash-stat-label">Customers</p>
+          {loading ? <Skel className="cpe-skel-stat" /> : <CountUp value={stats.customers} />}
         </article>
-        <article data-tone="cyan">
-          <span>CPE boxes</span>
-          {loading ? <Skel className="cpe-skel-stat" /> : <strong>{stats.devices}</strong>}
+        <article data-tone="boxes">
+          <span className="cpe-dash-stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 3.6 19.2 7.5v9L12 20.4 4.8 16.5v-9L12 3.6Z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              />
+              <path d="M12 20.4V12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              <path
+                d="M4.8 7.5 12 12l7.2-4.5"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <p className="cpe-dash-stat-label">CPE boxes</p>
+          {loading ? <Skel className="cpe-skel-stat" /> : <CountUp value={stats.devices} />}
         </article>
-        <article data-tone="teal">
-          <span>Outward</span>
-          {loading ? <Skel className="cpe-skel-stat" /> : <strong>{stats.repaired}</strong>}
+        <article data-tone="outward">
+          <span className="cpe-dash-stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M14.2 5.2v13.6"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M14.2 5.2c3.5 1.5 5.6 4.1 5.6 6.8s-2.1 5.3-5.6 6.8"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M4.2 12h9.2"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M10.4 8.4 14.2 12l-3.8 3.6"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <p className="cpe-dash-stat-label">Outward</p>
+          {loading ? <Skel className="cpe-skel-stat" /> : <CountUp value={stats.repaired} />}
         </article>
-        <article data-tone="amber">
-          <span>Inward open</span>
-          {loading ? <Skel className="cpe-skel-stat" /> : <strong>{stats.pending}</strong>}
+        <article data-tone="inward">
+          <span className="cpe-dash-stat-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M9.8 5.2v13.6"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M9.8 5.2C6.3 6.7 4.2 9.3 4.2 12s2.1 5.3 5.6 6.8"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M19.8 12H10.6"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+              <path
+                d="M13.6 8.4 9.8 12l3.8 3.6"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <p className="cpe-dash-stat-label">Inward</p>
+          {loading ? <Skel className="cpe-skel-stat" /> : <CountUp value={stats.pending} />}
         </article>
       </section>
 
