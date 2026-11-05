@@ -1130,6 +1130,7 @@ export default function CpeEntry() {
                   >
                     No MAC ID
                   </button>
+                  {/* Upload XL sheet — hidden for now
                   <button
                     type="button"
                     className="cpe-entry-bulk-btn"
@@ -1143,6 +1144,7 @@ export default function CpeEntry() {
                     <ExcelBrandIcon />
                     <span>Upload XL sheet</span>
                   </button>
+                  */}
                 </div>
                 {scanFeedback && (
                   <p
